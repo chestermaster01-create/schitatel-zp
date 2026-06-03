@@ -1,14 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Calendar as CalIcon, Users } from "lucide-react";
+import { Calendar as CalIcon, Users, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { Button } from "@/components/ui/button";
 
 export function NavBar() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { isDark, toggle } = useTheme();
   const items = [
     { to: "/", label: "Сотрудники", icon: Users },
     { to: "/calendar", label: "Общий календарь", icon: CalIcon },
   ];
   return (
-    <nav className="flex gap-1 rounded-md border border-border bg-card p-1">
+    <nav className="flex gap-1 rounded-md border border-border bg-card p-1 items-center">
       {items.map((it) => {
         const active = path === it.to;
         return (
@@ -24,6 +27,15 @@ export function NavBar() {
           </Link>
         );
       })}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggle}
+        aria-label={isDark ? "Светлая тема" : "Тёмная тема"}
+        className="h-8 w-8 ml-1"
+      >
+        {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </Button>
     </nav>
   );
 }
