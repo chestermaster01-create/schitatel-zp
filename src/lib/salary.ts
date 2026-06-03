@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export const RATE = 1700;
 export const BONUS_THRESHOLD = 3_000_000;
-export const BONUS_RATE = 0.01;
+export const BONUS_RATE = 0.001;
 export const STORAGE_KEY = "salary-app-v1";
 
 export const COLOR_PRESETS = [
