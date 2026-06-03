@@ -145,7 +145,7 @@ function Index() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Расчёт зарплат</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Базовая ставка: {fmt(RATE)} ₽ × рабочих дней · надбавка 1% от выручки при выручке свыше {fmt(BONUS_THRESHOLD)} ₽
+              Базовая ставка: {fmt(RATE)} ₽ × рабочих дней · надбавка 0.1% от выручки при выручке свыше {fmt(BONUS_THRESHOLD)} ₽
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
