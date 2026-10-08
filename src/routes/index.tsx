@@ -14,7 +14,7 @@ import {
   Trash2, Plus, Calendar, ChevronLeft, ChevronRight, Sparkles, Pencil, Palette,
 } from "lucide-react";
 import {
-  RATE, BONUS_THRESHOLD, COLOR_PRESETS, RU_MONTHS, RU_WEEKDAYS,
+  COLOR_PRESETS, RU_MONTHS, RU_WEEKDAYS,
   monthKey, daysInMonth, fmt, fmtShort, statsFor, useEmployees,
   colorThemeStyle, readableFg, type Employee,
 } from "@/lib/salary";
