@@ -54,12 +54,12 @@ function CombinedCalendar() {
       .filter((x) => x.revenue > 0);
 
   const monthTotals = useMemo(() => {
-    let revenue = 0, salary = 0, base = 0;
+    let revenue = 0, salary = 0, base = 0, bonus = 0;
     employees.forEach((e) => {
       const s = statsFor(e, mKey);
-      revenue += s.revenue; salary += s.salary; base += s.base;
+      revenue += s.revenue; salary += s.salary; base += s.base; bonus += s.bonus;
     });
-    return { revenue, salary, base };
+    return { revenue, salary, base, bonus };
   }, [employees, mKey]);
 
   return (
@@ -212,6 +212,10 @@ function CombinedCalendar() {
                         <div>{fmt(s.base)} ₽</div>
                       </div>
                       <div className="text-right">
+                        <div className="text-[10px] text-muted-foreground">Премия</div>
+                        <div>{fmt(s.bonus)} ₽</div>
+                      </div>
+                      <div className="text-right">
                         <div className="text-[10px] text-muted-foreground">ЗП итог</div>
                         <div className="font-semibold" style={{ color: e.color }}>{fmt(s.salary)} ₽</div>
                       </div>
@@ -221,9 +225,10 @@ function CombinedCalendar() {
               })}
             </ul>
           )}
-          <div className="mt-4 pt-3 border-t border-border grid grid-cols-3 gap-4 text-sm">
+          <div className="mt-4 pt-3 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <div><div className="text-muted-foreground text-xs">Общая выручка</div><div className="font-semibold">{fmt(monthTotals.revenue)} ₽</div></div>
             <div><div className="text-muted-foreground text-xs">ЗП без надбавки</div><div className="font-semibold">{fmt(monthTotals.base)} ₽</div></div>
+            <div><div className="text-muted-foreground text-xs">Премия за месяц</div><div className="font-semibold">{fmt(monthTotals.bonus)} ₽</div></div>
             <div><div className="text-muted-foreground text-xs">ФОТ с надбавкой</div><div className="font-semibold">{fmt(monthTotals.salary)} ₽</div></div>
           </div>
         </Card>

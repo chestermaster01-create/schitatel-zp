@@ -90,9 +90,10 @@ function Index() {
       acc.revenue += s.revenue;
       acc.salary += s.salary;
       acc.base += s.base;
+      acc.bonus += s.bonus;
       return acc;
     },
-    { days: 0, revenue: 0, salary: 0, base: 0 },
+    { days: 0, revenue: 0, salary: 0, base: 0, bonus: 0 },
   );
 
   const shiftMonth = (delta: number) => {
@@ -267,6 +268,7 @@ function Index() {
               <div className="flex justify-between"><dt className="text-muted-foreground">Рабочих дней (сумма)</dt><dd>{totals.days}</dd></div>
               <div className="flex justify-between"><dt className="text-muted-foreground">Общая выручка</dt><dd>{fmt(totals.revenue)} ₽</dd></div>
               <div className="flex justify-between"><dt className="text-muted-foreground">ЗП без надбавки (сумма)</dt><dd>{fmt(totals.base)} ₽</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Премия за месяц</dt><dd>{fmt(totals.bonus)} ₽</dd></div>
               <div className="flex justify-between font-semibold text-base pt-2 border-t border-border"><dt>ФОТ (с надбавкой)</dt><dd>{fmt(totals.salary)} ₽</dd></div>
             </dl>
           </Card>
@@ -293,7 +295,7 @@ function Index() {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-right">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-right">
                   <div>
                     <div className="text-xs text-muted-foreground">Дней</div>
                     <div className="text-lg font-semibold">{stats(selected).days}</div>
@@ -305,6 +307,10 @@ function Index() {
                   <div>
                     <div className="text-xs text-muted-foreground">ЗП без надбавки</div>
                     <div className="text-lg font-semibold">{fmt(stats(selected).base)} ₽</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Премия за месяц</div>
+                    <div className="text-lg font-semibold">{fmt(stats(selected).bonus)} ₽</div>
                   </div>
                   <div>
                     <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
