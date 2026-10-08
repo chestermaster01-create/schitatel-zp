@@ -12,6 +12,7 @@ import {
   fmt, fmtShort, statsFor, useEmployees,
 } from "@/lib/salary";
 import { NavBar } from "@/components/nav-bar";
+import { PointSwitcher } from "@/components/point-switcher";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({
@@ -72,6 +73,7 @@ function CombinedCalendar() {
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
+            <PointSwitcher />
             <NavBar />
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />

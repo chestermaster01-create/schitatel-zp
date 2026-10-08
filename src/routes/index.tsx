@@ -19,6 +19,7 @@ import {
   colorThemeStyle, readableFg, type Employee,
 } from "@/lib/salary";
 import { NavBar } from "@/components/nav-bar";
+import { PointSwitcher } from "@/components/point-switcher";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -149,6 +150,7 @@ function Index() {
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
+            <PointSwitcher />
             <NavBar />
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
