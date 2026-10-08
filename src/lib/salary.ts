@@ -44,12 +44,19 @@ export const fmtShort = (n: number) => {
   return String(n);
 };
 
-export function statsFor(e: Employee, mKey: string) {
+export type PointSettings = { rate: number; threshold: number };
+export const DEFAULT_SETTINGS: PointSettings = { rate: RATE, threshold: BONUS_THRESHOLD };
+export const settingsOf = (p?: Point): PointSettings => ({
+  rate: p?.rate ?? RATE,
+  threshold: p?.threshold ?? BONUS_THRESHOLD,
+});
+
+export function statsFor(e: Employee, mKey: string, cfg: PointSettings = DEFAULT_SETTINGS) {
   const m = e.revenue[mKey] ?? {};
   const days = Object.values(m).filter((v) => v > 0).length;
   const revenue = Object.values(m).reduce((a, b) => a + (b || 0), 0);
-  const base = days * RATE;
-  const hasBonus = revenue > BONUS_THRESHOLD;
+  const base = days * cfg.rate;
+  const hasBonus = revenue > cfg.threshold;
   const bonus = hasBonus ? revenue * BONUS_RATE : 0;
   return { days, revenue, base, bonus, hasBonus, salary: base + bonus };
 }
@@ -58,7 +65,7 @@ const STORAGE_EVENT = "salary-app:update";
 export const POINTS_KEY = "salary-app-points-v1";
 export const CURRENT_POINT_KEY = "salary-app-current-point";
 
-export type Point = { id: string; name: string };
+export type Point = { id: string; name: string; rate?: number; threshold?: number };
 
 type State = { all: Employee[]; points: Point[]; current: string };
 
@@ -122,7 +129,8 @@ export function useEmployees() {
       const next = updater(mine).map((e) => ({ ...e, pointId: s.current }));
       return { ...s, all: [...others, ...next] };
     });
-  return { employees, loaded, update, persist: (n: Employee[]) => update(() => n) };
+  const settings = settingsOf(state.points.find((p) => p.id === state.current));
+  return { employees, loaded, settings, update, persist: (n: Employee[]) => update(() => n) };
 }
 
 export function usePoints() {
@@ -141,6 +149,8 @@ export function usePoints() {
       }),
     rename: (id: string, name: string) =>
       mutate((s) => ({ ...s, points: s.points.map((p) => (p.id === id ? { ...p, name } : p)) })),
+    setSettings: (id: string, cfg: PointSettings) =>
+      mutate((s) => ({ ...s, points: s.points.map((p) => (p.id === id ? { ...p, ...cfg } : p)) })),
     remove: (id: string) =>
       mutate((s) => {
         const points = s.points.filter((p) => p.id !== id);

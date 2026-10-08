@@ -14,7 +14,7 @@ import {
   Trash2, Plus, Calendar, ChevronLeft, ChevronRight, Sparkles, Pencil, Palette,
 } from "lucide-react";
 import {
-  RATE, BONUS_THRESHOLD, COLOR_PRESETS, RU_MONTHS, RU_WEEKDAYS,
+  COLOR_PRESETS, RU_MONTHS, RU_WEEKDAYS,
   monthKey, daysInMonth, fmt, fmtShort, statsFor, useEmployees,
   colorThemeStyle, readableFg, type Employee,
 } from "@/lib/salary";
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { employees, update } = useEmployees();
+  const { employees, update, settings } = useEmployees();
   const [name, setName] = useState("");
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -76,7 +76,7 @@ function Index() {
     );
   };
 
-  const stats = (e: Employee) => statsFor(e, mKey);
+  const stats = (e: Employee) => statsFor(e, mKey, settings);
 
   const selected = useMemo(
     () => employees.find((e) => e.id === selectedId) ?? null,
@@ -147,7 +147,7 @@ function Index() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Расчёт зарплат</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Базовая ставка: {fmt(RATE)} ₽ × рабочих дней · надбавка 0.1% от выручки при выручке свыше {fmt(BONUS_THRESHOLD)} ₽
+              Базовая ставка: {fmt(settings.rate)} ₽ × рабочих дней · надбавка 0.1% от выручки при выручке свыше {fmt(settings.threshold)} ₽
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
