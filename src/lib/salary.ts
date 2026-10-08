@@ -22,6 +22,7 @@ export type Employee = {
   id: string;
   name: string;
   color?: string;
+  pointId?: string;
   revenue: Record<string, Record<number, number>>;
 };
 
@@ -54,52 +55,103 @@ export function statsFor(e: Employee, mKey: string) {
 }
 
 const STORAGE_EVENT = "salary-app:update";
+export const POINTS_KEY = "salary-app-points-v1";
+export const CURRENT_POINT_KEY = "salary-app-current-point";
 
-export function useEmployees() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+export type Point = { id: string; name: string };
+
+type State = { all: Employee[]; points: Point[]; current: string };
+
+function readState(): State {
+  let all: Employee[] = [];
+  let points: Point[] = [];
+  try { all = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { /* */ }
+  try { points = JSON.parse(localStorage.getItem(POINTS_KEY) || "[]"); } catch { /* */ }
+  let changed = false;
+  if (points.length === 0) {
+    points = [{ id: crypto.randomUUID(), name: "Пункт 1" }];
+    changed = true;
+  }
+  all.forEach((e, i) => {
+    if (!e.color) e.color = COLOR_PRESETS[i % COLOR_PRESETS.length];
+    if (!e.pointId || !points.some((p) => p.id === e.pointId)) {
+      e.pointId = points[0].id; changed = true;
+    }
+  });
+  let current = localStorage.getItem(CURRENT_POINT_KEY) || "";
+  if (!points.some((p) => p.id === current)) { current = points[0].id; changed = true; }
+  if (changed) writeState({ all, points, current }, false);
+  return { all, points, current };
+}
+
+function writeState(s: State, notify = true) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s.all));
+  localStorage.setItem(POINTS_KEY, JSON.stringify(s.points));
+  localStorage.setItem(CURRENT_POINT_KEY, s.current);
+  if (notify) window.dispatchEvent(new Event(STORAGE_EVENT));
+}
+
+function useStore() {
+  const [state, setState] = useState<State>({ all: [], points: [], current: "" });
   const [loaded, setLoaded] = useState(false);
-
   useEffect(() => {
-    const load = () => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const parsed: Employee[] = raw ? JSON.parse(raw) : [];
-        // assign default colors for old data
-        parsed.forEach((e, i) => {
-          if (!e.color) e.color = COLOR_PRESETS[i % COLOR_PRESETS.length];
-        });
-        setEmployees(parsed);
-      } catch {
-        setEmployees([]);
-      }
-      setLoaded(true);
-    };
+    const load = () => { setState(readState()); setLoaded(true); };
     load();
-    const handler = () => load();
-    window.addEventListener(STORAGE_EVENT, handler);
-    window.addEventListener("storage", handler);
+    window.addEventListener(STORAGE_EVENT, load);
+    window.addEventListener("storage", load);
     return () => {
-      window.removeEventListener(STORAGE_EVENT, handler);
-      window.removeEventListener("storage", handler);
+      window.removeEventListener(STORAGE_EVENT, load);
+      window.removeEventListener("storage", load);
     };
   }, []);
-
-  const persist = (next: Employee[]) => {
-    setEmployees(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    window.dispatchEvent(new Event(STORAGE_EVENT));
+  const mutate = (fn: (s: State) => State) => {
+    const next = fn(readState());
+    writeState(next);
+    setState(next);
   };
+  return { state, loaded, mutate };
+}
 
-  const update = (updater: (prev: Employee[]) => Employee[]) => {
-    setEmployees((prev) => {
-      const next = updater(prev);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      window.dispatchEvent(new Event(STORAGE_EVENT));
-      return next;
+export function useEmployees() {
+  const { state, loaded, mutate } = useStore();
+  const employees = state.all.filter((e) => e.pointId === state.current);
+  const update = (updater: (prev: Employee[]) => Employee[]) =>
+    mutate((s) => {
+      const mine = s.all.filter((e) => e.pointId === s.current);
+      const others = s.all.filter((e) => e.pointId !== s.current);
+      const next = updater(mine).map((e) => ({ ...e, pointId: s.current }));
+      return { ...s, all: [...others, ...next] };
     });
-  };
+  return { employees, loaded, update, persist: (n: Employee[]) => update(() => n) };
+}
 
-  return { employees, loaded, persist, update };
+export function usePoints() {
+  const { state, mutate } = useStore();
+  return {
+    points: state.points,
+    current: state.current,
+    counts: Object.fromEntries(
+      state.points.map((p) => [p.id, state.all.filter((e) => e.pointId === p.id).length]),
+    ) as Record<string, number>,
+    select: (id: string) => mutate((s) => ({ ...s, current: id })),
+    add: (name: string) =>
+      mutate((s) => {
+        const p = { id: crypto.randomUUID(), name };
+        return { ...s, points: [...s.points, p], current: p.id };
+      }),
+    rename: (id: string, name: string) =>
+      mutate((s) => ({ ...s, points: s.points.map((p) => (p.id === id ? { ...p, name } : p)) })),
+    remove: (id: string) =>
+      mutate((s) => {
+        const points = s.points.filter((p) => p.id !== id);
+        if (points.length === 0) return s;
+        return {
+          all: s.all.filter((e) => e.pointId !== id),
+          points,
+          current: s.current === id ? points[0].id : s.current,
+        };
+      }),
+  };
 }
 
 /** Convert hex to rgb tuple. */
