@@ -46,10 +46,12 @@ export const fmtShort = (n: number) => {
 
 export type PointSettings = { rate: number; threshold: number };
 export const DEFAULT_SETTINGS: PointSettings = { rate: RATE, threshold: BONUS_THRESHOLD };
-export const settingsOf = (p?: Point): PointSettings => ({
-  rate: p?.rate ?? RATE,
-  threshold: p?.threshold ?? BONUS_THRESHOLD,
-});
+/** Settings effective for a month: latest change made in that month or earlier. */
+export const settingsOf = (p?: Point, mKey: string = monthKey(new Date())): PointSettings => {
+  const base = { rate: p?.rate ?? RATE, threshold: p?.threshold ?? BONUS_THRESHOLD };
+  const keys = Object.keys(p?.history ?? {}).filter((k) => k <= mKey).sort();
+  return keys.length ? p!.history![keys[keys.length - 1]] : base;
+};
 
 export function statsFor(e: Employee, mKey: string, cfg: PointSettings = DEFAULT_SETTINGS) {
   const m = e.revenue[mKey] ?? {};
@@ -65,7 +67,7 @@ const STORAGE_EVENT = "salary-app:update";
 export const POINTS_KEY = "salary-app-points-v1";
 export const CURRENT_POINT_KEY = "salary-app-current-point";
 
-export type Point = { id: string; name: string; rate?: number; threshold?: number };
+export type Point = { id: string; name: string; rate?: number; threshold?: number; history?: Record<string, PointSettings> };
 
 type State = { all: Employee[]; points: Point[]; current: string };
 
@@ -129,8 +131,9 @@ export function useEmployees() {
       const next = updater(mine).map((e) => ({ ...e, pointId: s.current }));
       return { ...s, all: [...others, ...next] };
     });
-  const settings = settingsOf(state.points.find((p) => p.id === state.current));
-  return { employees, loaded, settings, update, persist: (n: Employee[]) => update(() => n) };
+  const cur = state.points.find((p) => p.id === state.current);
+  const settingsFor = (mKey: string) => settingsOf(cur, mKey);
+  return { employees, loaded, settingsFor, update, persist: (n: Employee[]) => update(() => n) };
 }
 
 export function usePoints() {
@@ -150,7 +153,7 @@ export function usePoints() {
     rename: (id: string, name: string) =>
       mutate((s) => ({ ...s, points: s.points.map((p) => (p.id === id ? { ...p, name } : p)) })),
     setSettings: (id: string, cfg: PointSettings) =>
-      mutate((s) => ({ ...s, points: s.points.map((p) => (p.id === id ? { ...p, ...cfg } : p)) })),
+      mutate((s) => ({ ...s, points: s.points.map((p) => (p.id === id ? { ...p, history: { ...(p.history ?? {}), [monthKey(new Date())]: cfg } } : p)) })),
     remove: (id: string) =>
       mutate((s) => {
         const points = s.points.filter((p) => p.id !== id);

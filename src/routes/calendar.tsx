@@ -25,7 +25,7 @@ export const Route = createFileRoute("/calendar")({
 });
 
 function CombinedCalendar() {
-  const { employees, settings } = useEmployees();
+  const { employees, settingsFor } = useEmployees();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -56,7 +56,7 @@ function CombinedCalendar() {
   const monthTotals = useMemo(() => {
     let revenue = 0, salary = 0, base = 0, bonus = 0;
     employees.forEach((e) => {
-      const s = statsFor(e, mKey, settings);
+      const s = statsFor(e, mKey, settingsFor(mKey));
       revenue += s.revenue; salary += s.salary; base += s.base; bonus += s.bonus;
     });
     return { revenue, salary, base, bonus };
@@ -190,7 +190,7 @@ function CombinedCalendar() {
           ) : (
             <ul className="space-y-2">
               {employees.map((e) => {
-                const s = statsFor(e, mKey, settings);
+                const s = statsFor(e, mKey, settingsFor(mKey));
                 return (
                   <li
                     key={e.id}
