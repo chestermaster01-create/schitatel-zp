@@ -78,6 +78,7 @@ export function PointSwitcher() {
       <Dialog open={cfgOpen} onOpenChange={setCfgOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
+            <p className="text-xs text-muted-foreground order-last">Изменения применяются с текущего месяца. Прошлые месяцы сохранят свои значения.</p>
             <DialogTitle>Настройки пункта «{cur?.name}»</DialogTitle>
           </DialogHeader>
           <label className="text-sm space-y-1 block">
