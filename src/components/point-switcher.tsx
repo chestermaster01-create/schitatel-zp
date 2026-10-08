@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,10 +9,15 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { usePoints } from "@/lib/salary";
+import { usePoints, settingsOf } from "@/lib/salary";
 
 export function PointSwitcher() {
-  const { points, current, counts, select, add, rename, remove } = usePoints();
+  const { points, current, counts, select, add, rename, remove, setSettings } = usePoints();
+  const [cfgOpen, setCfgOpen] = useState(false);
+  const [rate, setRate] = useState("");
+  const [thr, setThr] = useState("");
+  const openCfg = () => { const c = settingsOf(points.find((p) => p.id === current)); setRate(String(c.rate)); setThr(String(c.threshold)); setCfgOpen(true); };
+  const saveCfg = () => { const r = Number(rate.replace(/\s/g, "").replace(",", ".")); const t = Number(thr.replace(/\s/g, "").replace(",", ".")); if (!(r >= 0) || !(t >= 0)) return; setSettings(current, { rate: r, threshold: t }); setCfgOpen(false); };
   const [mode, setMode] = useState<"add" | "rename" | null>(null);
   const [name, setName] = useState("");
   const [confirm, setConfirm] = useState(false);
@@ -47,6 +52,9 @@ export function PointSwitcher() {
         onClick={() => { setName(cur?.name ?? ""); setMode("rename"); }}>
         <Pencil className="h-3.5 w-3.5" />
       </Button>
+      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Настройки пункта" onClick={openCfg}>
+        <Settings className="h-3.5 w-3.5" />
+      </Button>
       <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Удалить пункт"
         disabled={points.length <= 1} onClick={() => setConfirm(true)}>
         <Trash2 className="h-3.5 w-3.5" />
@@ -63,6 +71,27 @@ export function PointSwitcher() {
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setMode(null)}>Отмена</Button>
             <Button onClick={save}>Сохранить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={cfgOpen} onOpenChange={setCfgOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Настройки пункта «{cur?.name}»</DialogTitle>
+          </DialogHeader>
+          <label className="text-sm space-y-1 block">
+            <span className="text-muted-foreground">Ставка за рабочий день, ₽</span>
+            <Input inputMode="numeric" value={rate} onChange={(e) => setRate(e.target.value)} />
+          </label>
+          <label className="text-sm space-y-1 block">
+            <span className="text-muted-foreground">Выручка за месяц для надбавки (свыше), ₽</span>
+            <Input inputMode="numeric" value={thr} onChange={(e) => setThr(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveCfg()} />
+          </label>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setCfgOpen(false)}>Отмена</Button>
+            <Button onClick={saveCfg}>Сохранить</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
